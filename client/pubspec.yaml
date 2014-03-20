@@ -1,0 +1,4 @@
+name: dartchat_client
+description: A sample application
+dependencies:
+  browser: any
