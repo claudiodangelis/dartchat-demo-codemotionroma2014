@@ -19,6 +19,7 @@ class ChatHandler {
     var rnd = new Random().nextInt(999).toString();
     users.add(new User(socket, 'User'+rnd));
     sendInfo("User${rnd} e' entrato in chat.");
+    print(users.length);
   }
   
   void onData(_data, socket) {
@@ -39,12 +40,14 @@ class ChatHandler {
   }
   
   void sendMsg(data) {
+    print(data);
     users.forEach((user) {
       user.ws.add(JSON.encode({"cmd":"msg","arg":data}));
     });
   }
   
   void sendInfo(info) {
+    print(info);
     users.forEach((user) {
       user.ws.add(JSON.encode({"cmd":"info","arg":info}));
     });
@@ -61,9 +64,11 @@ class ChatHandler {
 main() {
   ChatHandler ch = new ChatHandler();
   runZoned(() {
-    HttpServer.bind('127.0.0.1', 4040).then((server) {
+    HttpServer.bind('0.0.0.0', 4040).then((server) {
       server.listen((HttpRequest req) {
+        print("Nuova richiesta HTTP");
         if (req.uri.path == '/ws') {
+          print("Nuova richiesta WS");
           WebSocketTransformer.upgrade(req).then((socket) {
             ch.addUser(socket);
             socket.listen((data) {

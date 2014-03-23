@@ -1,10 +1,13 @@
 import 'dart:html';
 import 'dart:convert' show JSON;
+// Debug:
+import 'dart:async';
+import 'dart:math' show Random;
 
 DivElement chatBox = querySelector('#chatBox');
 InputElement inputUsername = querySelector('#username');
 ButtonElement btnUsername = querySelector('#btnUsername');
-InputElement msg = querySelector('#msg');
+TextAreaElement msg = querySelector('#msg');
 ButtonElement btnMsg = querySelector('#btnMsg');
 
 class Connection {
@@ -38,6 +41,7 @@ class Connection {
           newP.text = data["arg"];
           newP.classes.add("msg");
           chatBox.append(newP);
+          chatBox.scrollTop = chatBox.scrollHeight;
           break;
           
         case "info":
@@ -45,6 +49,7 @@ class Connection {
           newP.text = data["arg"];
           newP.classes.add("info");
           chatBox.append(newP);
+          chatBox.scrollTop = chatBox.scrollHeight;
           break;
       }
     });
@@ -64,7 +69,7 @@ class Connection {
 }
 
 main() {
-  Connection conn = new Connection('ws://127.0.0.1:4040/ws');
+  Connection conn = new Connection('ws://' + window.location.host +  ':4040/ws');
   
   btnUsername.onClick.listen((e) {
     if (inputUsername.value.isNotEmpty) {
@@ -77,5 +82,11 @@ main() {
     msg
       ..value = ''
       ..focus();
+  });
+  
+  msg.onKeyUp.listen((e) {
+    if (e.keyCode == 13 && !e.ctrlKey) {
+      btnMsg.click();
+    }
   });
 }

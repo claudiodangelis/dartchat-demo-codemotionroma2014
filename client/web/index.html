@@ -8,13 +8,17 @@
     <link rel="stylesheet" type="text/css" href="style.css">
   </head>
  
-  <body>   
-  <input id="username" type="text"/>
-  <button id="btnUsername">Imposta nickname</button>
-  <br/>
-  <input id="msg" type="text" />
-  <button id="btnMsg">Invia</button>
-  <div id="chatBox"></div>
+  <body>
+  <div id="container">
+    <div id="chatBox"></div>
+    <div id="userBox">
+      <input id="username" type="text"/>
+      <button id="btnUsername">Imposta nick</button>
+      <br/>
+      <textarea rows="2" id="msg"></textarea><br/>
+      <button id="btnMsg">Invia</button>
+    </div>
+    </div>
     <script type="application/dart" src="app.dart"></script>
     <!-- for this next line to work, your pubspec.yaml file must have a dependency on 'browser' -->
     <script src="packages/browser/dart.js"></script>
