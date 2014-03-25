@@ -2,13 +2,12 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:math' show Random;
+import 'package:intl/intl.dart';
 
 class User {
   WebSocket ws;
   String username;
-  User(this.ws, this.username) {
-    this.ws.add(JSON.encode({"cmd":"setUsername", "arg":this.username}));
-  }
+  User(this.ws, this.username);
 }
 
 class ChatHandler {
@@ -26,31 +25,52 @@ class ChatHandler {
     Map data = JSON.decode(_data);
     switch (data["cmd"]) {
       case "setUsername":
-        socket.add(JSON.encode({"cmd":"setUsername", "arg":data["arg"]}));
-        var user = users.singleWhere((c) => c.ws == socket);
-        var _tmp_username = user.username;
-        user.username = data["arg"];
-        sendInfo(_tmp_username + " e' ora conosciuto come " + data["arg"]);
+
+        if (usernameNotExists(data["arg"])) {
+          socket.add(JSON.encode({"cmd":"setUsername", "arg":data["arg"]}));
+          var user = users.singleWhere((c) => c.ws == socket);
+          var _tmp_username = user.username;
+          user.username = data["arg"];
+          sendInfo(_tmp_username + " e' ora conosciuto come " + data["arg"]);
+        } else {
+          sendInfo("Oops, lo username esiste", socket);
+        }
         break;
         
       case "sendMsg":
-        sendMsg(data["arg"]["username"] + ": " + data["arg"]["msg"]);
+        sendMsg(data["arg"]["username"], data["arg"]["msg"]);
         break;
     }
   }
   
-  void sendMsg(data) {
-    print(data);
+  bool usernameNotExists(String username) {
+    try {
+      users.singleWhere((c) => c.username == username);
+      return false;
+    } catch (e) {
+      return true;
+    }
+  }
+  
+  void sendMsg(username, msg) {
+    var formatter = new DateFormat('HH:mm:ss');
     users.forEach((user) {
-      user.ws.add(JSON.encode({"cmd":"msg","arg":data}));
+      user.ws.add(JSON.encode({"cmd":"msg","arg":{"username" : username, "msg": msg, "timestamp":formatter.format(new DateTime.now())}}));
     });
   }
   
-  void sendInfo(info) {
+  void sendInfo(info, [WebSocket socket]) {
     print(info);
-    users.forEach((user) {
-      user.ws.add(JSON.encode({"cmd":"info","arg":info}));
-    });
+    var formatter = new DateFormat('HH:mm:ss');
+
+    var timestamp = formatter.format(new DateTime.now());
+    if (socket == null) {
+      users.forEach((user) {
+        user.ws.add(JSON.encode({"cmd":"info","arg":{"info":info, "timestamp":timestamp}}));
+      });
+    } else {
+      socket.add(JSON.encode({"cmd":"info","arg":{"info":info, "timestamp":timestamp}}));
+    }
   }
   
   void onDone(socket) {
@@ -69,14 +89,18 @@ main() {
         print("Nuova richiesta HTTP");
         if (req.uri.path == '/ws') {
           print("Nuova richiesta WS");
-          WebSocketTransformer.upgrade(req).then((socket) {
-            ch.addUser(socket);
-            socket.listen((data) {
-                ch.onData(data, socket);
-              },
-              onDone: (){
-              ch.onDone(socket);
-            });
+          WebSocketTransformer.upgrade(req)
+            ..then((socket) {
+              ch.addUser(socket);
+              socket.listen((data) {
+                  ch.onData(data, socket);
+                },
+                onDone: (){
+                ch.onDone(socket);
+              });
+            })
+          ..catchError((e) {
+            print("Oops, error");
           });
         }
       });

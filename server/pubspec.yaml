@@ -1,2 +1,3 @@
 name: dartchat_server
-
+dependencies:
+  intl: any

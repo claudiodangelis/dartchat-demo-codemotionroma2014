@@ -9,12 +9,14 @@ InputElement inputUsername = querySelector('#username');
 ButtonElement btnUsername = querySelector('#btnUsername');
 TextAreaElement msg = querySelector('#msg');
 ButtonElement btnMsg = querySelector('#btnMsg');
+DivElement usernameArea = querySelector('#usernameArea');
+DivElement msgArea = querySelector('#msgArea');
 
-class Connection {
+class ClientChat {
   WebSocket ws;
   String url;
   String username;
-  Connection(this.url) {
+  ClientChat(this.url) {
     _init();
   }
   
@@ -26,6 +28,10 @@ class Connection {
     
     ws.onClose.listen((e) {
       print("Connection CLOSED");
+      ParagraphElement wsNotAvail = new ParagraphElement();
+      wsNotAvail.text = 'Impossibile accedere alla chat. Il tuo browser non supporta WebSocket oppure il server è offline';
+      wsNotAvail.classes.add("info");
+      chatBox.append(wsNotAvail);
     });
     
     ws.onMessage.listen((e) {
@@ -33,20 +39,33 @@ class Connection {
       switch(data["cmd"]) {
         case "setUsername":
           this.username = data["arg"];
-          inputUsername.value = this.username;
+          usernameArea.style
+            ..visibility = 'hidden'
+            ..display = 'none';
+          
+          msgArea.style
+            ..visibility = 'visible'
+            ..display = 'inline';
+          
+          msg.focus();
           break;
           
         case "msg":
           ParagraphElement newP = new ParagraphElement();
-          newP.text = data["arg"];
+          ParagraphElement header = new ParagraphElement();
+          header.text = "[" + data["arg"]["timestamp"] + "] " + data["arg"]["username"] + " dice: ";
+          header.classes.add("msgHeader");
+          newP.text = data["arg"]["msg"];
+          print(data["arg"]["timestamp"]);
           newP.classes.add("msg");
+          chatBox.append(header);
           chatBox.append(newP);
           chatBox.scrollTop = chatBox.scrollHeight;
           break;
           
         case "info":
           ParagraphElement newP = new ParagraphElement();
-          newP.text = data["arg"];
+          newP.text = "[" + data["arg"]["timestamp"] + "] " + data["arg"]["info"];
           newP.classes.add("info");
           chatBox.append(newP);
           chatBox.scrollTop = chatBox.scrollHeight;
@@ -69,19 +88,28 @@ class Connection {
 }
 
 main() {
-  Connection conn = new Connection('ws://' + window.location.host +  ':4040/ws');
+  ClientChat client = new ClientChat('ws://' + window.location.hostname +  ':4040/ws');
+  inputUsername
+    ..focus()
+    ..onKeyUp.listen((e) {
+      if (e.keyCode == 13 && !e.ctrlKey) {
+        btnUsername.click();
+      }
+    });
   
   btnUsername.onClick.listen((e) {
-    if (inputUsername.value.isNotEmpty) {
-      conn.send({"cmd":"setUsername", "arg":inputUsername.value});
+    if (inputUsername.value.trim().isNotEmpty) {
+      client.send({"cmd":"setUsername", "arg":inputUsername.value});
     }
   });
   
   btnMsg.onClick.listen((e) {
-    conn.sendMsg(msg.value);
-    msg
-      ..value = ''
-      ..focus();
+    if (msg.value.trim().isNotEmpty) {
+      client.sendMsg(msg.value);
+      msg
+        ..value = ''
+        ..focus();
+    }
   });
   
   msg.onKeyUp.listen((e) {

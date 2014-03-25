@@ -12,11 +12,14 @@
   <div id="container">
     <div id="chatBox"></div>
     <div id="userBox">
-      <input id="username" type="text"/>
-      <button id="btnUsername">Imposta nick</button>
-      <br/>
-      <textarea rows="2" id="msg"></textarea><br/>
-      <button id="btnMsg">Invia</button>
+      <div id="usernameArea">
+        <input id="username" type="text" placeholder="Imposta nickname"/>
+        <button id="btnUsername">Imposta nick</button>
+      </div>
+      <div id="msgArea">
+        <textarea rows="2" id="msg"></textarea><br/>
+        <button id="btnMsg">Invia</button>
+      </div>      
     </div>
     </div>
     <script type="application/dart" src="app.dart"></script>

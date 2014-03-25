@@ -6,10 +6,17 @@ html {
 p {
   font-family: sans-serif;
   font-size: small;
+  margin-bottom: -9px;
 }
 
-#username {
-  width: 150px;
+input, button {
+  font-size: x-large;
+  padding: 3px;
+}
+
+#msgArea {
+  display: none;
+  visibility: hidden;
 }
 
 #msg {
@@ -28,6 +35,11 @@ p {
 }
 .info {
   color: white;
+  text-shadow: 1px 1px 1px #333;
+}
+
+.msgHeader {
+  color: yellow;
   text-shadow: 1px 1px 1px #333;
 }
 
