@@ -1,14 +1,11 @@
 import 'dart:html';
 import 'dart:convert' show JSON;
-// Debug:
-import 'dart:async';
-import 'dart:math' show Random;
 
 DivElement chatBox = querySelector('#chatBox');
-InputElement inputUsername = querySelector('#username');
-ButtonElement btnUsername = querySelector('#btnUsername');
-TextAreaElement msg = querySelector('#msg');
-ButtonElement btnMsg = querySelector('#btnMsg');
+InputElement usernameInput = querySelector('#usernameInput');
+ButtonElement usernameBtn = querySelector('#usernameBtn');
+TextAreaElement msgTextarea = querySelector('#msgTextarea');
+ButtonElement msgBtn = querySelector('#msgBtn');
 DivElement usernameArea = querySelector('#usernameArea');
 DivElement msgArea = querySelector('#msgArea');
 
@@ -16,11 +13,16 @@ class ClientChat {
   WebSocket ws;
   String url;
   String username;
+  int messageCounter;
+  final int MAX_MESSAGES_TRESHOLD = 100;
+  bool max_messages;
   ClientChat(this.url) {
     _init();
   }
   
   void _init() {
+    messageCounter = 0;
+    max_messages = false;
     ws = new WebSocket(this.url);
     ws.onOpen.listen((e) {
       print("Connection OK");
@@ -29,16 +31,17 @@ class ClientChat {
     ws.onClose.listen((e) {
       print("Connection CLOSED");
       ParagraphElement wsNotAvail = new ParagraphElement();
-      wsNotAvail.text = 'Impossibile accedere alla chat. Il tuo browser non supporta WebSocket oppure il server è offline';
+      wsNotAvail.text = 'Server offline, impossibile accedere alla chat.';
       wsNotAvail.classes.add("info");
       chatBox.append(wsNotAvail);
+      chatBox.scrollTop = chatBox.scrollHeight;
     });
     
     ws.onMessage.listen((e) {
       Map data = JSON.decode(e.data);
       switch(data["cmd"]) {
         case "setUsername":
-          this.username = data["arg"];
+          username = data["arg"];
           usernameArea.style
             ..visibility = 'hidden'
             ..display = 'none';
@@ -47,28 +50,35 @@ class ClientChat {
             ..visibility = 'visible'
             ..display = 'inline';
           
-          msg.focus();
+          msgTextarea.focus();
           break;
           
         case "msg":
-          ParagraphElement newP = new ParagraphElement();
-          ParagraphElement header = new ParagraphElement();
-          header.text = "[" + data["arg"]["timestamp"] + "] " + data["arg"]["username"] + " dice: ";
-          header.classes.add("msgHeader");
-          newP.text = data["arg"]["msg"];
-          print(data["arg"]["timestamp"]);
-          newP.classes.add("msg");
-          chatBox.append(header);
-          chatBox.append(newP);
+          DivElement messageWrapper = new DivElement();
+          ParagraphElement messageP = new ParagraphElement();
+          ParagraphElement userHeader = new ParagraphElement();
+          userHeader.text = "[" + data["arg"]["timestamp"] + "] " +
+              data["arg"]["username"] + " dice: ";
+          
+          userHeader.classes.add("msgHeader");
+          messageP.text = data["arg"]["msg"];
+          messageP.classes.add("msg");
+          messageWrapper.append(userHeader);
+          messageWrapper.append(messageP);
+          chatBox.append(messageWrapper);
           chatBox.scrollTop = chatBox.scrollHeight;
+          clean();
           break;
           
         case "info":
-          ParagraphElement newP = new ParagraphElement();
-          newP.text = "[" + data["arg"]["timestamp"] + "] " + data["arg"]["info"];
-          newP.classes.add("info");
-          chatBox.append(newP);
+          ParagraphElement messageP = new ParagraphElement();
+          messageP.text = "[" + data["arg"]["timestamp"] + "] " +
+              data["arg"]["info"];
+          
+          messageP.classes.add("info");
+          chatBox.append(messageP);
           chatBox.scrollTop = chatBox.scrollHeight;
+          clean();
           break;
       }
     });
@@ -83,38 +93,52 @@ class ClientChat {
   }
   
   sendMsg(String msg) {
-    send({"cmd":"sendMsg","arg":{"username":this.username,"msg":msg}});
+    send({"cmd":"sendMsg","arg":{"username": username, "msg": msg}});
+  }
+  
+  void clean() {
+    if (max_messages) {
+      chatBox.children.removeAt(0);
+      print("Rimuovo");
+    } else {
+      messageCounter++;
+      if (messageCounter == MAX_MESSAGES_TRESHOLD) {
+        max_messages = true;
+      }
+    }
   }
 }
 
 main() {
-  ClientChat client = new ClientChat('ws://' + window.location.hostname +  ':4040/ws');
-  inputUsername
+  ClientChat client = new ClientChat('ws://' + window.location.hostname + 
+      ':4040/ws');
+  
+  usernameInput
     ..focus()
     ..onKeyUp.listen((e) {
       if (e.keyCode == 13 && !e.ctrlKey) {
-        btnUsername.click();
+        usernameBtn.click();
       }
     });
   
-  btnUsername.onClick.listen((e) {
-    if (inputUsername.value.trim().isNotEmpty) {
-      client.send({"cmd":"setUsername", "arg":inputUsername.value});
+  usernameBtn.onClick.listen((e) {
+    if (usernameInput.value.trim().isNotEmpty) {
+      client.send({"cmd":"setUsername", "arg":usernameInput.value});
     }
   });
   
-  btnMsg.onClick.listen((e) {
-    if (msg.value.trim().isNotEmpty) {
-      client.sendMsg(msg.value);
-      msg
+  msgBtn.onClick.listen((e) {
+    if (msgTextarea.value.trim().isNotEmpty) {
+      client.sendMsg(msgTextarea.value);
+      msgTextarea
         ..value = ''
         ..focus();
     }
   });
   
-  msg.onKeyUp.listen((e) {
+  msgTextarea.onKeyUp.listen((e) {
     if (e.keyCode == 13 && !e.ctrlKey) {
-      btnMsg.click();
+      msgBtn.click();
     }
   });
 }

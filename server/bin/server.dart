@@ -18,14 +18,12 @@ class ChatHandler {
     var rnd = new Random().nextInt(999).toString();
     users.add(new User(socket, 'User'+rnd));
     sendInfo("User${rnd} e' entrato in chat.");
-    print(users.length);
   }
   
   void onData(_data, socket) {
     Map data = JSON.decode(_data);
     switch (data["cmd"]) {
       case "setUsername":
-
         if (usernameNotExists(data["arg"])) {
           socket.add(JSON.encode({"cmd":"setUsername", "arg":data["arg"]}));
           var user = users.singleWhere((c) => c.ws == socket);
@@ -33,7 +31,7 @@ class ChatHandler {
           user.username = data["arg"];
           sendInfo(_tmp_username + " e' ora conosciuto come " + data["arg"]);
         } else {
-          sendInfo("Oops, lo username esiste", socket);
+          sendInfo("Oops, lo username esiste gia'", socket);
         }
         break;
         
@@ -55,30 +53,31 @@ class ChatHandler {
   void sendMsg(username, msg) {
     var formatter = new DateFormat('HH:mm:ss');
     users.forEach((user) {
-      user.ws.add(JSON.encode({"cmd":"msg","arg":{"username" : username, "msg": msg, "timestamp":formatter.format(new DateTime.now())}}));
+      user.ws.add(JSON.encode({"cmd": "msg", "arg":{"username" : username,
+        "msg": msg, "timestamp": formatter.format(new DateTime.now())}}));
     });
   }
   
   void sendInfo(info, [WebSocket socket]) {
-    print(info);
     var formatter = new DateFormat('HH:mm:ss');
 
     var timestamp = formatter.format(new DateTime.now());
     if (socket == null) {
       users.forEach((user) {
-        user.ws.add(JSON.encode({"cmd":"info","arg":{"info":info, "timestamp":timestamp}}));
+        user.ws.add(JSON.encode({"cmd":"info", "arg":{"info":info,
+          "timestamp": timestamp}}));
       });
     } else {
-      socket.add(JSON.encode({"cmd":"info","arg":{"info":info, "timestamp":timestamp}}));
+      socket.add(JSON.encode({"cmd": "info", "arg":{"info": info,
+        "timestamp": timestamp}}));
     }
   }
   
   void onDone(socket) {
     var user = users.singleWhere((c) => c.ws == socket);
-    sendInfo("${user.username} ha lasciato la chat");
+    sendInfo("${user.username} ha lasciato la chat.");
     users.remove(user);
   }
-  
 }
 
 main() {
@@ -86,23 +85,19 @@ main() {
   runZoned(() {
     HttpServer.bind('0.0.0.0', 4040).then((server) {
       server.listen((HttpRequest req) {
-        print("Nuova richiesta HTTP");
-        if (req.uri.path == '/ws') {
-          print("Nuova richiesta WS");
-          WebSocketTransformer.upgrade(req)
-            ..then((socket) {
-              ch.addUser(socket);
-              socket.listen((data) {
-                  ch.onData(data, socket);
-                },
-                onDone: (){
-                ch.onDone(socket);
-              });
-            })
-          ..catchError((e) {
-            print("Oops, error");
-          });
-        }
+        WebSocketTransformer.upgrade(req)
+          ..then((socket) {
+            ch.addUser(socket);
+            socket.listen((data) {
+                ch.onData(data, socket);
+              },
+              onDone: (){
+              ch.onDone(socket);
+            });
+          })
+        ..catchError((e) {
+          print("Oops, error.");
+        });
       });
     });
   });
