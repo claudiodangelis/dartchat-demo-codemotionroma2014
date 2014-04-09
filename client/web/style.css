@@ -25,25 +25,20 @@ input, button {
   position: relative;
 }
 
-#usernameInput {
-  width: 90%;  
-}
-
 #usernameBtn {
-  position: absolute;
-  right: 0;
-  bottom: 0;
+  padding:5px 15px; 
+  background:#ccc; 
+  border:0 none;
+  cursor:pointer;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  float: right;
 }
 
 #msgTextarea {
-  width: 90%;
+  width: 60%;
 }
 
-#msgBtn {
-  position: absolute;
-  right: 0;
-  bottom: 5px;
-}
 
 .msg {
   background-color:white;
@@ -97,4 +92,25 @@ input, button {
     margin-left: auto;
     margin-right: auto;
   }
+}
+
+input[type=submit] {
+  padding:5px 15px; 
+  background:#ccc; 
+  border:0 none;
+  cursor:pointer;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  float: right;
+}
+input[type=text] {
+  padding:5px; 
+  border:2px solid #ccc; 
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  float: left;
+}
+
+input[type=text]:focus {
+  border-color:#333;
 }

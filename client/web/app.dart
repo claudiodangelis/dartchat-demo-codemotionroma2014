@@ -4,8 +4,8 @@ import 'dart:convert' show JSON;
 DivElement chatBox = querySelector('#chatBox');
 InputElement usernameInput = querySelector('#usernameInput');
 ButtonElement usernameBtn = querySelector('#usernameBtn');
-TextAreaElement msgTextarea = querySelector('#msgTextarea');
-ButtonElement msgBtn = querySelector('#msgBtn');
+InputElement msgTextarea = querySelector('#msgTextarea');
+InputElement msgBtn = querySelector('#msgBtn');
 DivElement usernameArea = querySelector('#usernameArea');
 DivElement msgArea = querySelector('#msgArea');
 
@@ -159,4 +159,6 @@ main() {
       msgBtn.click();
     }
   });
+  
+
 }
