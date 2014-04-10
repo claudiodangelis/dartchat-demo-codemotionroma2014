@@ -94,6 +94,19 @@ input, button {
   }
 }
 
+@media screen and (max-width: 405px) {
+   
+  #usernameBtn {
+    width: 45%;
+    padding-left: 1px;
+    padding-right: 1px;
+  }
+
+  #usernameInput {
+    width: 48%;  
+  }
+}
+
 input[type=submit] {
   padding:5px 15px; 
   background:#ccc; 
